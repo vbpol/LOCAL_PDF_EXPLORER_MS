@@ -10,4 +10,4 @@ if not exist "%VENV_PATH%\Scripts\activate.bat" (
     call "%VENV_PATH%\Scripts\activate.bat"
 )
 
-python run_cli.py %*
+python src/main.py %*
