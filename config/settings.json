@@ -1,0 +1,17 @@
+{
+    "file_categories": {
+        "Images": [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", ".svg", ".webp"],
+        "Documents": [".pdf", ".doc", ".docx", ".txt", ".rtf", ".odt", ".xlsx", ".xls", ".pptx", ".ppt", ".csv", ".md"],
+        "Audio": [".mp3", ".wav", ".flac", ".aac", ".ogg", ".m4a"],
+        "Video": [".mp4", ".mkv", ".avi", ".mov", ".wmv", ".flv", ".webm"],
+        "Archives": [".zip", ".rar", ".7z", ".tar", ".gz", ".bz2", ".iso"],
+        "Code": [".py", ".js", ".html", ".css", ".java", ".cpp", ".c", ".h", ".cs", ".php", ".json", ".xml", ".yml", ".yaml", ".sh", ".bat"],
+        "Executables": [".exe", ".msi", ".apk", ".app", ".dmg", ".deb", ".rpm"]
+    },
+    "default_category": "Others",
+    "ignore_files": [".DS_Store", "Thumbs.db", "desktop.ini", "main.py", "organizer.py", "run.bat", "requirements.txt"],
+    "ignore_folders": [".git", ".env", "venv", "__pycache__", "node_modules"],
+    "backup_enabled": true,
+    "db_path": "data/history.db",
+    "log_format": "json"
+}
