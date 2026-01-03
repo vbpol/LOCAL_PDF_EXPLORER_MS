@@ -19,11 +19,14 @@ class PDFTableView(QTableView):
     metadata_edit_requested = pyqtSignal(object) # Emits index
     file_rename_requested = pyqtSignal(object, str) # Emits index, new_name
     toc_action_requested = pyqtSignal(object) # Emits index (For Red/Green button)
+    bookmark_toggled = pyqtSignal(object) # Emits index for Fav toggle
     batch_toc_requested = pyqtSignal(list) # Emits list of indexes
-    
+    batch_bookmark_requested = pyqtSignal(list) # Emits list of indexes for Fav toggle
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setup_ui()
+        self.clicked.connect(self.on_table_clicked)
         
     def setup_ui(self):
         # Basic Appearance
@@ -54,17 +57,13 @@ class PDFTableView(QTableView):
         Configure column resize modes and widths.
         """
         header = self.horizontalHeader()
-        # 0: Filename, 1: Type, 2: Tags, 3: Category, 4: Path, 5: Actions
+        # 0: Filename, 1: Type, 2: Tags, 3: Category, 4: Fav, 5: Bookmarks, 6: Path, 7: Actions
         
         # Default behavior
         header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
         
         # Specifics
         # Filename: Interactive/Stretch. 
-        # User wants to resize, but usually filename should take available space.
-        # If we set to Interactive, it won't auto-fill.
-        # Let's keep it Interactive as requested "allow users to resize column width"
-        # But we can set a large initial width.
         self.setColumnWidth(0, 300) 
         
         # Type: Resize to contents, but hidden by default
@@ -75,16 +74,20 @@ class PDFTableView(QTableView):
         self.setColumnWidth(2, 150)
         self.setColumnWidth(3, 100)
         
-        # Bookmarks: Fixed small
+        # Fav: Fixed small
         header.setSectionResizeMode(4, QHeaderView.ResizeMode.Fixed)
-        self.setColumnWidth(4, 80)
+        self.setColumnWidth(4, 40)
+
+        # Bookmarks: Fixed small
+        header.setSectionResizeMode(5, QHeaderView.ResizeMode.Fixed)
+        self.setColumnWidth(5, 80)
         
         # Path: Interactive. Default width
-        self.setColumnWidth(5, 300) # Default width for path
+        self.setColumnWidth(6, 300) # Default width for path
         
         # Actions: Fixed larger for 3 buttons
-        header.setSectionResizeMode(6, QHeaderView.ResizeMode.Fixed)
-        self.setColumnWidth(6, 120)
+        header.setSectionResizeMode(7, QHeaderView.ResizeMode.Fixed)
+        self.setColumnWidth(7, 120)
         
         # Context Menu
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
@@ -96,7 +99,7 @@ class PDFTableView(QTableView):
 
         # Action Delegate
         self.action_delegate = ActionDelegate(self)
-        self.setItemDelegateForColumn(6, self.action_delegate)
+        self.setItemDelegateForColumn(7, self.action_delegate)
         self.action_delegate.action_requested.connect(self.on_action_requested)
         
         # Styling (CSS-like)
@@ -118,6 +121,11 @@ class PDFTableView(QTableView):
                 border-bottom: 1px solid #d0d0d0;
             }
         """)
+
+    def on_table_clicked(self, index):
+        """Handle clicks on the table."""
+        if index.column() == 4: # Fav column
+            self.bookmark_toggled.emit(index)
 
     def show_header_menu(self, position):
         """
@@ -203,9 +211,16 @@ class PDFTableView(QTableView):
         menu.addAction(act_rename)
         
         menu.addSeparator()
+
+        # Batch Bookmark (Toggle Fav)
+        selected_indexes = self.selectionModel().selectedRows()
+        if len(selected_indexes) > 0:
+            act_bookmark = QAction(f"Toggle Bookmark for {len(selected_indexes)} Selected Files", self)
+            act_bookmark.triggered.connect(lambda: self.batch_bookmark_requested.emit(selected_indexes))
+            act_bookmark.setToolTip("Toggle favorite status for selected files")
+            menu.addAction(act_bookmark)
         
         # Batch ToC Generation (if multiple selected)
-        selected_indexes = self.selectionModel().selectedRows()
         if len(selected_indexes) > 1:
             act_batch_toc = QAction(f"Generate ToC for {len(selected_indexes)} Selected Files", self)
             act_batch_toc.triggered.connect(lambda: self.batch_toc_requested.emit(selected_indexes))

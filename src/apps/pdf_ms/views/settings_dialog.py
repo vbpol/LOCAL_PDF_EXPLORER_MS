@@ -52,6 +52,14 @@ class SettingsDialog(QDialog):
         self.edit_local_date = QLineEdit()
         form_layout.addRow("Local DEV Date:", self.edit_local_date)
 
+        # Local DEV Scope
+        self.edit_local_scope = QLineEdit()
+        form_layout.addRow("Local DEV Scope:", self.edit_local_scope)
+
+        # DEV AI IDE
+        self.edit_dev_ai_ide = QLineEdit()
+        form_layout.addRow("DEV AI IDE:", self.edit_dev_ai_ide)
+
         # Last Version on Github
         self.edit_last_version = QLineEdit()
         form_layout.addRow("Last Version on GitHub:", self.edit_last_version)
@@ -80,6 +88,8 @@ class SettingsDialog(QDialog):
         
         self.edit_local_version.setText(self.current_settings.get("local_dev_version", "0.1.0"))
         self.edit_local_date.setText(self.current_settings.get("local_dev_date", ""))
+        self.edit_local_scope.setText(self.current_settings.get("local_dev_scope", ""))
+        self.edit_dev_ai_ide.setText(self.current_settings.get("dev_ai_ide", "TRAE"))
         self.edit_last_version.setText(self.current_settings.get("last_version_github", ""))
         self.edit_publication_date.setText(self.current_settings.get("date_of_publication", ""))
         self.edit_github_url.setText(self.current_settings.get("github_repository_url", ""))
@@ -95,6 +105,8 @@ class SettingsDialog(QDialog):
             "log_format": self.edit_log_format.text(),
             "local_dev_version": self.edit_local_version.text(),
             "local_dev_date": self.edit_local_date.text(),
+            "local_dev_scope": self.edit_local_scope.text(),
+            "dev_ai_ide": self.edit_dev_ai_ide.text(),
             "last_version_github": self.edit_last_version.text(),
             "date_of_publication": self.edit_publication_date.text(),
             "github_repository_url": self.edit_github_url.text()

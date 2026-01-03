@@ -24,7 +24,8 @@
 ### 4.2 Metadata Management
 - **Tags**: Add, remove, and manage custom tags (e.g., "Invoice", "Urgent", "Personal").
 - **Notes**: Rich text or plain text notes associated with a specific file.
-- **Bookmarks**: Create named bookmarks pointing to specific pages (external viewer integration or internal simple reference).
+- **Table of Contents (Structure)**: View and navigate PDF internal structure (ToC). Store extraction status.
+- **User Bookmarks (Favorites)**: "Star" or favorite files for quick access/visibility in the grid. Support for single click toggle and batch selection toggle.
 
 ### 4.3 Persistence
 - **SQLite Database**: Stores mappings between File Paths (or Hashes) and Metadata.
@@ -45,7 +46,8 @@
 3.  **Scan**: App scans folder, matches existing metadata from DB.
 4.  **Browse**: User sees list of PDFs.
 5.  **Annotate**: User selects a file -> Details Panel opens -> User types notes/adds tags -> Auto-save.
-6.  **Search**: User types "Invoice" -> List filters to show only matching files.
+6.  **Bookmark**: User clicks "Star" icon on a row -> File is marked as favorite.
+7.  **Search**: User types "Invoice" -> List filters to show only matching files.
 
 ## 7. Data Model (SQLite)
 
@@ -57,7 +59,8 @@
 | `file_hash` | TEXT | MD5/SHA256 for tracking renames (optional phase 2) |
 | `tags` | TEXT | JSON string or comma-separated tags |
 | `notes` | TEXT | User notes |
-| `bookmarks` | TEXT | JSON string: `[{"page": 1, "label": "Intro"}]` |
+| `bookmarks` | TEXT | JSON string: ToC Data `[{"page": 1, "label": "Intro"}]` |
+| `is_bookmarked` | INTEGER | 0 or 1. User Favorite status. |
 | `last_modified` | TEXT | Timestamp of last metadata edit |
 
 ## 8. Interface Mockup Concept

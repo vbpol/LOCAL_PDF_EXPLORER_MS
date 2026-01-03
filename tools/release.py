@@ -62,6 +62,30 @@ def run_git_commands(version):
         except Exception as e:
             print(f"Execution error: {e}")
 
+def update_version_history(version, date, ai_ide="TRAE"):
+    """
+    Append new version to Version_History.md
+    """
+    history_path = Path("Version_History.md")
+    if not history_path.exists():
+        # Try finding it relative to script if run from tools/
+        history_path = Path("../Version_History.md")
+        
+    if not history_path.exists():
+        print("Warning: Version_History.md not found. Creating new one.")
+        with open("Version_History.md", "w") as f:
+            f.write("# Version History\n\n| Version | Date | Description | AI IDE |\n|:---:|:---:|:---|:---:|\n")
+        history_path = Path("Version_History.md")
+
+    new_line = f"| **v{version}** | {date} | Auto-release update | {ai_ide} |\n"
+    
+    try:
+        with open(history_path, "a") as f:
+            f.write(new_line)
+        print(f"Updated {history_path}")
+    except Exception as e:
+        print(f"Failed to update history: {e}")
+
 def main():
     print("Starting release process...")
     
@@ -92,6 +116,10 @@ def main():
     save_config(config_path, config)
     print("Settings updated.")
     
+    # Update Version History
+    ai_ide = config.get("dev_ai_ide", "TRAE")
+    update_version_history(new_version, today, ai_ide)
+
     run_git_commands(new_version)
     print("Release process finished.")
 

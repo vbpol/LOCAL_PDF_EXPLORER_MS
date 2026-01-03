@@ -29,6 +29,7 @@ class MainController:
         
         # Initialize Views
         self.main_window = MainWindow()
+        self.update_window_title() # Set dynamic title
         self.metadata_view = MetadataView()
         self.main_window.add_metadata_view(self.metadata_view)
         
@@ -58,12 +59,34 @@ class MainController:
         self.main_window.table_view.file_rename_requested.connect(self.rename_file)
         self.main_window.table_view.toc_action_requested.connect(self.on_toc_action)
         self.main_window.table_view.batch_toc_requested.connect(self.on_batch_toc_generation)
+        self.main_window.table_view.batch_bookmark_requested.connect(self.on_batch_bookmark_requested)
+        self.main_window.table_view.bookmark_toggled.connect(self.on_bookmark_toggled)
         
         # Connect Metadata View Signals (if any generic ones, currently handled via Reader or dedicated view)
         pass
 
         self.reader_windows = [] # Keep references to prevent GC
 
+        self._init_file_watcher_and_load()
+
+    def update_window_title(self):
+        """
+        Set the main window title dynamically based on settings.
+        Format: {Title} -- Github_Ver (Date) >>> Local_DEV_Ver [Date] -- # AI_IDE #
+        """
+        settings = Settings()
+        
+        title = "PDF Management System"
+        github_ver = settings.config.get("last_version_github", "v1.0.0")
+        pub_date = settings.config.get("date_of_publication", "Unknown")
+        local_ver = settings.config.get("local_dev_version", "1.0.0")
+        local_date = settings.config.get("local_dev_date", "Unknown")
+        ai_ide = settings.config.get("dev_ai_ide", "TRAE")
+        
+        full_title = f"{title} -- {github_ver} ({pub_date}) >>> v{local_ver} [{local_date}] -- # {ai_ide} #"
+        self.main_window.setWindowTitle(full_title)
+
+    def _init_file_watcher_and_load(self):
         # Initialize File Watcher BEFORE loading history
         from src.core.services.file_watcher import FileWatcherService
         self.file_watcher = FileWatcherService()
@@ -129,9 +152,99 @@ class MainController:
                     self._load_folder_data(current_root)
                     
             except Exception as e:
-                QMessageBox.critical(self.main_window, "Error", f"ToC Generation Failed: {str(e)}")
+                print(f"Error generating ToC: {e}")
+                QMessageBox.critical(self.main_window, "Error", f"Failed to generate ToC: {e}")
             finally:
                 QApplication.restoreOverrideCursor()
+
+    def on_bookmark_toggled(self, index):
+        """Handle toggling of user bookmark (favorite)."""
+        # index is from ProxyModel (View)
+        source_index = self.proxy_model.mapToSource(index)
+        row = source_index.row()
+        
+        # Get file path from source model (which uses source DF)
+        file_path = self.table_model.get_file_path_at(row)
+        if not file_path:
+            return
+
+        # Toggle in Core/DB
+        new_status = self.app_core.toggle_bookmark(file_path)
+        
+        # Update In-Memory DataFrame
+        if self.full_df is not None:
+             # Check if column exists (migration safety)
+             if 'is_bookmarked' not in self.full_df.columns:
+                 self.full_df['is_bookmarked'] = False
+                 
+             # Update the DataFrame cell
+             # We use columns.get_loc to be safe about column position
+             col_idx = self.full_df.columns.get_loc('is_bookmarked')
+             self.full_df.iloc[row, col_idx] = new_status
+             
+             # Emit signal to View to refresh the specific cell
+             # Col 4 is Fav in the TableModel
+             fav_col_index = 4 
+             idx = self.table_model.index(row, fav_col_index)
+             self.table_model.dataChanged.emit(idx, idx, [Qt.ItemDataRole.DisplayRole, Qt.ItemDataRole.UserRole])
+
+    def on_batch_bookmark_requested(self, indexes):
+        """
+        Handle batch toggling of bookmarks for selected rows.
+        Currently toggles all to 'True' if mixed, or toggles all to 'False' if all are True.
+        Or simpler: just toggle each one individually?
+        Better UX: If any is unstarred, star all. If all starred, unstar all.
+        """
+        if not indexes:
+            return
+
+        # 1. Analyze current state
+        files_to_update = [] # list of (row, file_path, current_status)
+        all_bookmarked = True
+        
+        for index in indexes:
+            source_index = self.proxy_model.mapToSource(index)
+            row = source_index.row()
+            file_path = self.table_model.get_file_path_at(row)
+            
+            if file_path:
+                # Check current status from DF
+                is_bookmarked = False
+                if self.full_df is not None and 'is_bookmarked' in self.full_df.columns:
+                     col_idx = self.full_df.columns.get_loc('is_bookmarked')
+                     is_bookmarked = bool(self.full_df.iloc[row, col_idx])
+                
+                if not is_bookmarked:
+                    all_bookmarked = False
+                
+                files_to_update.append((row, file_path, is_bookmarked))
+
+        # 2. Determine target state
+        # If all are bookmarked, we want to unbookmark all (target = False)
+        # Otherwise, we want to bookmark all (target = True)
+        target_state = not all_bookmarked
+
+        # 3. Apply updates
+        for row, file_path, current_status in files_to_update:
+            # Only update if different from target (optimization)
+            if current_status != target_state:
+                # Update Core/DB
+                # Core toggle_bookmark toggles current state. 
+                # Since we know current != target, toggling current gives target.
+                self.app_core.toggle_bookmark(file_path)
+                
+                # Update In-Memory DataFrame
+                if self.full_df is not None:
+                     if 'is_bookmarked' not in self.full_df.columns:
+                         self.full_df['is_bookmarked'] = False
+                     
+                     col_idx = self.full_df.columns.get_loc('is_bookmarked')
+                     self.full_df.iloc[row, col_idx] = target_state
+                     
+                     # Notify View
+                     fav_col_index = 4
+                     idx = self.table_model.index(row, fav_col_index)
+                     self.table_model.dataChanged.emit(idx, idx, [Qt.ItemDataRole.DisplayRole, Qt.ItemDataRole.UserRole])
 
     def on_edit_metadata(self, index):
         """
@@ -437,6 +550,7 @@ class MainController:
         if dialog.exec():
             new_config = dialog.get_settings()
             settings.save_config(new_config)
+            self.update_window_title() # Refresh title
             QMessageBox.information(self.main_window, "Success", "Settings saved successfully!")
 
     def on_selection_changed(self, selected, deselected):

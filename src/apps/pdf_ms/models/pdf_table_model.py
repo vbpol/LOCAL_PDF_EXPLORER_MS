@@ -10,7 +10,7 @@ class PDFTableModel(QAbstractTableModel):
     def __init__(self, data=None):
         super().__init__()
         self._data = data
-        self._headers = ["Filename", "Type", "Tags", "Category", "Bookmarks", "Path", "Actions"]
+        self._headers = ["Filename", "Type", "Tags", "Category", "Fav", "Bookmarks", "Path", "Actions"]
 
     def set_data(self, df):
         self.beginResetModel()
@@ -48,17 +48,23 @@ class PDFTableModel(QAbstractTableModel):
             elif col == 3:
                 return str(self._data.iloc[row]['category'])
             elif col == 4:
+                # Fav / User Bookmark
+                if 'is_bookmarked' in self._data.columns:
+                    val = self._data.iloc[row]['is_bookmarked']
+                    return "★" if val else "☆"
+                return "☆"
+            elif col == 5:
                 # Bookmarks Status
                 if 'has_toc' in self._data.columns:
                     val = self._data.iloc[row]['has_toc']
                     has_toc = True if (val and val is not pd.NA) else False
                     return "✓ Yes" if has_toc else "✗ No"
                 return "?"
-            elif col == 5:
+            elif col == 6:
                 if 'relative_path' in self._data.columns:
                     return str(self._data.iloc[row]['relative_path'])
                 return str(self._data.iloc[row]['original_path'])
-            elif col == 6:
+            elif col == 7:
                 # Delegate handles painting, but we can return text for accessibility if needed
                 return "" 
         
@@ -69,9 +75,14 @@ class PDFTableModel(QAbstractTableModel):
             if 'has_toc' in self._data.columns:
                 val = self._data.iloc[row]['has_toc']
                 has_toc = True if (val and val is not pd.NA) else False
+            
+            is_bookmarked = False
+            if 'is_bookmarked' in self._data.columns:
+                is_bookmarked = bool(self._data.iloc[row]['is_bookmarked'])
                 
             return {
                 'has_toc': has_toc,
+                'is_bookmarked': is_bookmarked,
                 'path': str(self._data.iloc[row]['original_path'])
             }
         

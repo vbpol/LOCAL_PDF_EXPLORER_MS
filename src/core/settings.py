@@ -21,7 +21,9 @@ class Settings:
             "date_of_publication": "",
             "github_repository_url": "",
             "local_dev_version": "0.1.0",
-            "local_dev_date": ""
+            "local_dev_date": "",
+            "local_dev_scope": "",
+            "dev_ai_ide": "TRAE"
         }
         
         with open(self.config_path, 'r') as f:

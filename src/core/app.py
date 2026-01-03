@@ -3,6 +3,7 @@ from .settings import Settings
 from .organizer import FileOrganizer
 from .storage import Storage
 from .pdf_manager import PDFManager
+from .services.bookmark_service import BookmarkService
 from pathlib import Path
 
 class CoreApp:
@@ -11,6 +12,7 @@ class CoreApp:
         self.organizer = FileOrganizer(self.settings)
         self.storage = Storage(self.settings.db_path)
         self.pdf_manager = PDFManager(self.storage)
+        self.bookmark_service = BookmarkService(self.storage)
         self.current_plan = None
         self._observers = []
 
@@ -38,9 +40,10 @@ class CoreApp:
                 fpath = str(row['original_path'])
                 meta = self.pdf_manager.get_metadata(fpath)
                 has_toc = bool(meta.get('bookmarks'))
-                return pd.Series([meta['tags'], meta['notes'], has_toc])
+                is_bookmarked = meta.get('is_bookmarked', False)
+                return pd.Series([meta['tags'], meta['notes'], has_toc, is_bookmarked])
 
-            self.current_plan[['tags', 'notes', 'has_toc']] = self.current_plan.apply(get_meta, axis=1)
+            self.current_plan[['tags', 'notes', 'has_toc', 'is_bookmarked']] = self.current_plan.apply(get_meta, axis=1)
 
         return self.current_plan
 
@@ -83,3 +86,7 @@ class CoreApp:
         """Returns True if file has bookmarks in DB, else False."""
         meta = self.pdf_manager.get_metadata(file_path)
         return bool(meta.get('bookmarks'))
+
+    def toggle_bookmark(self, file_path):
+        """Toggle user bookmark (favorite) status."""
+        return self.bookmark_service.toggle_bookmark(file_path)

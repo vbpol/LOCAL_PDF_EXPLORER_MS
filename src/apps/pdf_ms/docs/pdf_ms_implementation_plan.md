@@ -36,6 +36,25 @@
     - Logic verified via `tests/test_pdf_app_logic.py`.
     - Verify data persistence (via Controller logic and CoreApp integration).
 
+## Phase 5: Advanced Features (Current)
+- [x] **PDF Reader Integration**:
+    - `ReaderWindow` with PyMuPDF rendering.
+    - Navigation controls (Next/Prev, Go to Page).
+- [x] **Table of Contents (ToC)**:
+    - Extract ToC from PDF.
+    - Store ToC in `bookmarks` column in DB.
+    - Display ToC in Reader side panel.
+- [x] **User Bookmarks (Favorites)**:
+    - Add `is_bookmarked` column to `pdf_metadata` table.
+    - Create `BookmarkService` for toggling favorites.
+    - Add "Fav" (★) column to Grid View.
+    - Allow toggling via click on grid cell.
+    - **Batch Action**: Add context menu option to toggle bookmarks for multiple selected files.
+- [x] **Settings & Versioning**:
+    - Settings Dialog with persistent storage.
+    - Dynamic App Title with Version/Date/AI-IDE info.
+    - `Version_History.md` tracking.
+
 ## Validation Checklist
 - [x] App launches without errors.
 - [x] Scans directory and lists PDF files.
@@ -43,3 +62,5 @@
 - [x] Can add a note "Hello World" to a file.
 - [x] Restart app -> "Test" and "Hello World" persist (verified via CoreApp logic).
 - [x] Double click opens the PDF.
+- [x] ToC extraction works and persists.
+- [x] User Favorites (Star) persist across sessions.

@@ -10,6 +10,7 @@ class MainWindow(QMainWindow):
     """
     def __init__(self):
         super().__init__()
+        # Title will be set by controller
         self.setWindowTitle("PDF Management System")
         self.resize(1000, 600)
         

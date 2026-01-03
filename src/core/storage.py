@@ -32,9 +32,18 @@ class Storage:
                 tags TEXT,
                 notes TEXT,
                 bookmarks TEXT,
+                is_bookmarked INTEGER DEFAULT 0,
                 last_modified TEXT
             )
         ''')
+        
+        # Migration: Add is_bookmarked column if it doesn't exist
+        try:
+            cursor.execute("SELECT is_bookmarked FROM pdf_metadata LIMIT 1")
+        except sqlite3.OperationalError:
+            cursor.execute("ALTER TABLE pdf_metadata ADD COLUMN is_bookmarked INTEGER DEFAULT 0")
+            conn.commit()
+
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS root_history (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -73,12 +82,44 @@ class Storage:
         """Retrieve metadata for a specific PDF file."""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        cursor.execute("SELECT tags, notes, bookmarks FROM pdf_metadata WHERE file_path = ?", (file_path,))
+        cursor.execute("SELECT tags, notes, bookmarks, is_bookmarked FROM pdf_metadata WHERE file_path = ?", (file_path,))
         row = cursor.fetchone()
         conn.close()
         if row:
-            return {"tags": row[0], "notes": row[1], "bookmarks": row[2]}
-        return {"tags": "", "notes": "", "bookmarks": ""}
+            return {
+                "tags": row[0], 
+                "notes": row[1], 
+                "bookmarks": row[2],
+                "is_bookmarked": bool(row[3])
+            }
+        return {"tags": "", "notes": "", "bookmarks": "", "is_bookmarked": False}
+
+    def update_bookmark_status(self, file_path, is_bookmarked):
+        """Update only the bookmark status (favorite/starred)."""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        modified = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        # Upsert logic is tricky for partial update if row doesn't exist.
+        # Check if exists first.
+        cursor.execute("SELECT 1 FROM pdf_metadata WHERE file_path = ?", (file_path,))
+        exists = cursor.fetchone()
+        
+        if exists:
+            cursor.execute('''
+                UPDATE pdf_metadata 
+                SET is_bookmarked = ?, last_modified = ?
+                WHERE file_path = ?
+            ''', (1 if is_bookmarked else 0, modified, file_path))
+        else:
+            # Insert new row with default empty values for others
+            cursor.execute('''
+                INSERT INTO pdf_metadata (file_path, tags, notes, bookmarks, is_bookmarked, last_modified)
+                VALUES (?, '', '', '', ?, ?)
+            ''', (file_path, 1 if is_bookmarked else 0, modified))
+            
+        conn.commit()
+        conn.close()
 
     def update_pdf_metadata(self, file_path, tags, notes, bookmarks):
         """Update or insert metadata for a PDF file."""
