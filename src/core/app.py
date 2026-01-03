@@ -37,9 +37,10 @@ class CoreApp:
                 # However, organizer returns 'original_path' column.
                 fpath = str(row['original_path'])
                 meta = self.pdf_manager.get_metadata(fpath)
-                return pd.Series([meta['tags'], meta['notes']])
+                has_toc = bool(meta.get('bookmarks'))
+                return pd.Series([meta['tags'], meta['notes'], has_toc])
 
-            self.current_plan[['tags', 'notes']] = self.current_plan.apply(get_meta, axis=1)
+            self.current_plan[['tags', 'notes', 'has_toc']] = self.current_plan.apply(get_meta, axis=1)
 
         return self.current_plan
 
@@ -71,4 +72,14 @@ class CoreApp:
         return self.storage.get_root_history()
 
     def update_file_metadata(self, file_path, tags, notes):
-        self.pdf_manager.update_metadata(file_path, tags, notes)
+        # We preserve existing bookmarks if possible.
+        # Calling update_custom is safer if we don't want to wipe bookmarks.
+        self.pdf_manager.update_custom(file_path, tags=tags, notes=notes)
+
+    def update_file_custom(self, file_path, **kwargs):
+        self.pdf_manager.update_custom(file_path, **kwargs)
+
+    def refresh_toc_status(self, file_path):
+        """Returns True if file has bookmarks in DB, else False."""
+        meta = self.pdf_manager.get_metadata(file_path)
+        return bool(meta.get('bookmarks'))

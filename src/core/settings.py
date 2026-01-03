@@ -16,8 +16,13 @@ class Settings:
                 "ignore_folders": [],
                 "backup_enabled": False,
                 "db_path": "data/history.db",
-                "log_format": "json"
-            }
+                "log_format": "json",
+                "last_version_github": "",
+            "date_of_publication": "",
+            "github_repository_url": "",
+            "local_dev_version": "0.1.0",
+            "local_dev_date": ""
+        }
         
         with open(self.config_path, 'r') as f:
             return json.load(f)

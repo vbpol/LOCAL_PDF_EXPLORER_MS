@@ -1,5 +1,5 @@
 from PyQt6.QtWidgets import QFileDialog, QMessageBox, QApplication
-from PyQt6.QtCore import QModelIndex
+from PyQt6.QtCore import QModelIndex, Qt
 import os
 import sys
 import subprocess
@@ -12,6 +12,7 @@ from src.apps.pdf_ms.models.pdf_proxy_model import PDFSortFilterProxyModel
 from src.apps.pdf_ms.views.main_window import MainWindow
 from src.apps.pdf_ms.views.metadata_view import MetadataView
 from src.apps.pdf_ms.views.settings_dialog import SettingsDialog
+from src.apps.pdf_ms.views.reader_window import ReaderWindow
 
 class MainController:
     """
@@ -50,17 +51,162 @@ class MainController:
         self.metadata_view.save_requested.connect(self.save_metadata)
         self.main_window.combo_history.activated.connect(self.on_history_selected)
         
-        # Connect Context Menu Signals
+        # Connect Table Signals
         self.main_window.table_view.file_open_requested.connect(self.on_double_click)
         self.main_window.table_view.folder_open_requested.connect(self.open_containing_folder)
+        self.main_window.table_view.metadata_edit_requested.connect(self.on_edit_metadata) # Optional explicit edit
         self.main_window.table_view.file_rename_requested.connect(self.rename_file)
-        # self.main_window.table_view.metadata_edit_requested.connect(self.on_edit_metadata) # Optional explicit edit
+        self.main_window.table_view.toc_action_requested.connect(self.on_toc_action)
+        self.main_window.table_view.batch_toc_requested.connect(self.on_batch_toc_generation)
+        
+        # Connect Metadata View Signals (if any generic ones, currently handled via Reader or dedicated view)
+        pass
 
-        # Load History and Startup
+        self.reader_windows = [] # Keep references to prevent GC
+
+        # Initialize File Watcher BEFORE loading history
+        from src.core.services.file_watcher import FileWatcherService
+        self.file_watcher = FileWatcherService()
+        self.file_watcher.handler.file_created.connect(self.on_file_changed)
+        self.file_watcher.handler.file_deleted.connect(self.on_file_changed)
+        self.file_watcher.handler.file_moved.connect(self.on_file_changed)
+
+        # Load History and Startup (may trigger _load_folder_data which needs file_watcher)
         self.load_history_and_startup()
+
+    def on_file_changed(self, path):
+        """
+        Refresh view when file system changes.
+        Optimisation: Could update model directly, but simple reload is safer for MVP.
+        """
+        # Checks if the change is relevant to the current directory
+        current_root = self.main_window.combo_history.currentText()
+        if current_root:
+            normalized_root = os.path.abspath(current_root)
+            normalized_path = os.path.abspath(path)
+            
+            # Simple check if changed file is within current root
+            if normalized_path.startswith(normalized_root):
+                 print(f"File changed: {path}. Reloading...")
+                 self._load_folder_data(current_root)
 
     def show(self):
         self.main_window.show()
+
+    def on_toc_action(self, index):
+        """
+        Handle click on ToC Status button.
+        """
+        row = index.row()
+        file_path = self.table_model.get_file_path_at(row)
+        if not file_path or not os.path.exists(file_path):
+            return
+
+        has_toc = self.app_core.refresh_toc_status(file_path)
+        
+        if has_toc:
+            # Open Reader
+            reader = ReaderWindow(file_path, self.app_core, self.main_window)
+            reader.show()
+            self.reader_windows.append(reader)
+        else:
+            # Generate ToC
+            try:
+                # Show loading cursor
+                QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+                
+                from src.core.services.pdf_renderer import PDFRenderer
+                import json
+                
+                toc = PDFRenderer.get_toc(file_path)
+                toc_json = json.dumps(toc)
+                self.app_core.update_file_custom(file_path, bookmarks=toc_json)
+                
+                # Refresh UI (Reload folder to update 'has_toc' column)
+                # We could just update the model data if we knew where to poke, but reloading is safer for MVP
+                current_root = self.main_window.combo_history.currentText()
+                if current_root:
+                    self._load_folder_data(current_root)
+                    
+            except Exception as e:
+                QMessageBox.critical(self.main_window, "Error", f"ToC Generation Failed: {str(e)}")
+            finally:
+                QApplication.restoreOverrideCursor()
+
+    def on_edit_metadata(self, index):
+        """
+        Explicit action to edit metadata.
+        Opens Reader Window focused on metadata (Right Panel).
+        """
+        self.on_double_click(index)
+
+    def on_batch_toc_generation(self, indexes):
+        """
+        Generate ToC for multiple selected PDFs.
+        """
+        if not indexes:
+            return
+            
+        # Show progress / confirmation
+        reply = QMessageBox.question(
+            self.main_window,
+            "Batch ToC Generation",
+            f"Generate Table of Contents for {len(indexes)} selected PDFs?\n\n"
+            "This may take a few moments for large files.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+        
+        if reply != QMessageBox.StandardButton.Yes:
+            return
+            
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+        
+        try:
+            from src.core.services.pdf_renderer import PDFRenderer
+            import json
+            
+            success_count = 0
+            error_files = []
+            
+            for index in indexes:
+                try:
+                    source_index = self.proxy_model.mapToSource(index)
+                    row = source_index.row()
+                    file_path = self.table_model.get_file_path_at(row)
+                    
+                    if not file_path or not os.path.exists(file_path):
+                        error_files.append(os.path.basename(file_path) if file_path else "Unknown")
+                        continue
+                    
+                    # Extract ToC
+                    toc = PDFRenderer.get_toc(file_path)
+                    toc_json = json.dumps(toc)
+                    
+                    # Save to DB
+                    self.app_core.update_file_custom(file_path, bookmarks=toc_json)
+                    success_count += 1
+                    
+                except Exception as e:
+                    error_files.append(f"{os.path.basename(file_path)}: {str(e)}")
+            
+            # Refresh UI
+            current_root = self.main_window.combo_history.currentText()
+            if current_root:
+                self._load_folder_data(current_root)
+            
+            # Show summary
+            msg = f"Successfully generated ToC for {success_count}/{len(indexes)} files."
+            if error_files:
+                msg += f"\n\n Errors:\n" + "\n".join(error_files[:5])  # Show first 5 errors
+                if len(error_files) > 5:
+                    msg += f"\n... and {len(error_files) - 5} more."
+            
+            QMessageBox.information(self.main_window, "Batch ToC Complete", msg)
+            
+        except Exception as e:
+            QMessageBox.critical(self.main_window, "Error", f"Batch generation failed: {str(e)}")
+        finally:
+            QApplication.restoreOverrideCursor()
 
     def load_history_and_startup(self):
         history = self.app_core.get_root_history()
@@ -263,6 +409,9 @@ class MainController:
         
         # Update Title
         self.main_window.setWindowTitle(f"PDF Management System - {folder_path}")
+        
+        # Start Watcher
+        self.file_watcher.start_watching(folder_path)
 
     def on_search(self, text):
         # Use Proxy Model Filtering
@@ -345,4 +494,12 @@ class MainController:
         
         file_path = self.table_model.get_file_path_at(row)
         if file_path and os.path.exists(file_path):
-            os.startfile(file_path)
+            # NEW: Open Reader Window instead of system viewer
+            reader = ReaderWindow(file_path, self.app_core, self.main_window)
+            reader.show()
+            self.reader_windows.append(reader) # Prevent GC
+            
+            # Clean up closed windows
+            reader.destroyed.connect(lambda: self.reader_windows.remove(reader) if reader in self.reader_windows else None)
+        else:
+            QMessageBox.warning(self.main_window, "Error", "File does not exist.")

@@ -39,6 +39,31 @@ class SettingsDialog(QDialog):
         self.edit_log_format = QLineEdit()
         form_layout.addRow("Log Format:", self.edit_log_format)
 
+        # Separator
+        separator = QLabel("--- App Info ---")
+        separator.setStyleSheet("font-weight: bold; margin-top: 10px;")
+        form_layout.addRow(separator)
+
+        # Local DEV Version
+        self.edit_local_version = QLineEdit()
+        form_layout.addRow("Local DEV Version:", self.edit_local_version)
+
+        # Local DEV Date
+        self.edit_local_date = QLineEdit()
+        form_layout.addRow("Local DEV Date:", self.edit_local_date)
+
+        # Last Version on Github
+        self.edit_last_version = QLineEdit()
+        form_layout.addRow("Last Version on GitHub:", self.edit_last_version)
+
+        # Date of Publication
+        self.edit_publication_date = QLineEdit()
+        form_layout.addRow("Date of Publication:", self.edit_publication_date)
+
+        # GitHub Repository URL
+        self.edit_github_url = QLineEdit()
+        form_layout.addRow("GitHub Repository URL:", self.edit_github_url)
+
         layout.addLayout(form_layout)
         
         # Buttons
@@ -52,6 +77,12 @@ class SettingsDialog(QDialog):
         self.edit_db_path.setText(self.current_settings.get("db_path", "data/history.db"))
         self.chk_backup.setChecked(self.current_settings.get("backup_enabled", False))
         self.edit_log_format.setText(self.current_settings.get("log_format", "json"))
+        
+        self.edit_local_version.setText(self.current_settings.get("local_dev_version", "0.1.0"))
+        self.edit_local_date.setText(self.current_settings.get("local_dev_date", ""))
+        self.edit_last_version.setText(self.current_settings.get("last_version_github", ""))
+        self.edit_publication_date.setText(self.current_settings.get("date_of_publication", ""))
+        self.edit_github_url.setText(self.current_settings.get("github_repository_url", ""))
 
     def get_settings(self):
         """
@@ -61,5 +92,10 @@ class SettingsDialog(QDialog):
             "default_category": self.edit_default_category.text(),
             # "db_path": self.edit_db_path.text(), # Ignored for now
             "backup_enabled": self.chk_backup.isChecked(),
-            "log_format": self.edit_log_format.text()
+            "log_format": self.edit_log_format.text(),
+            "local_dev_version": self.edit_local_version.text(),
+            "local_dev_date": self.edit_local_date.text(),
+            "last_version_github": self.edit_last_version.text(),
+            "date_of_publication": self.edit_publication_date.text(),
+            "github_repository_url": self.edit_github_url.text()
         }

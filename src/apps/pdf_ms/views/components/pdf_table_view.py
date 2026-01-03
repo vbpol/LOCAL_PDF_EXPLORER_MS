@@ -18,6 +18,8 @@ class PDFTableView(QTableView):
     folder_open_requested = pyqtSignal(object) # Emits index
     metadata_edit_requested = pyqtSignal(object) # Emits index
     file_rename_requested = pyqtSignal(object, str) # Emits index, new_name
+    toc_action_requested = pyqtSignal(object) # Emits index (For Red/Green button)
+    batch_toc_requested = pyqtSignal(list) # Emits list of indexes
     
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -73,12 +75,16 @@ class PDFTableView(QTableView):
         self.setColumnWidth(2, 150)
         self.setColumnWidth(3, 100)
         
-        # Path: Interactive. Default width
-        self.setColumnWidth(4, 300) # Default width for path
+        # Bookmarks: Fixed small
+        header.setSectionResizeMode(4, QHeaderView.ResizeMode.Fixed)
+        self.setColumnWidth(4, 80)
         
-        # Actions: Fixed small
-        header.setSectionResizeMode(5, QHeaderView.ResizeMode.Fixed)
-        self.setColumnWidth(5, 80)
+        # Path: Interactive. Default width
+        self.setColumnWidth(5, 300) # Default width for path
+        
+        # Actions: Fixed larger for 3 buttons
+        header.setSectionResizeMode(6, QHeaderView.ResizeMode.Fixed)
+        self.setColumnWidth(6, 120)
         
         # Context Menu
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
@@ -90,7 +96,7 @@ class PDFTableView(QTableView):
 
         # Action Delegate
         self.action_delegate = ActionDelegate(self)
-        self.setItemDelegateForColumn(5, self.action_delegate)
+        self.setItemDelegateForColumn(6, self.action_delegate)
         self.action_delegate.action_requested.connect(self.on_action_requested)
         
         # Styling (CSS-like)
@@ -162,6 +168,8 @@ class PDFTableView(QTableView):
             self.file_open_requested.emit(index)
         elif action_type == 'open_folder':
             self.folder_open_requested.emit(index)
+        elif action_type == 'toc_action':
+            self.toc_action_requested.emit(index)
 
     def show_context_menu(self, position):
         index = self.indexAt(position)
@@ -195,6 +203,15 @@ class PDFTableView(QTableView):
         menu.addAction(act_rename)
         
         menu.addSeparator()
+        
+        # Batch ToC Generation (if multiple selected)
+        selected_indexes = self.selectionModel().selectedRows()
+        if len(selected_indexes) > 1:
+            act_batch_toc = QAction(f"Generate ToC for {len(selected_indexes)} Selected Files", self)
+            act_batch_toc.triggered.connect(lambda: self.batch_toc_requested.emit(selected_indexes))
+            act_batch_toc.setToolTip("Generate Table of Contents for all selected PDFs")
+            menu.addAction(act_batch_toc)
+            menu.addSeparator()
 
         # Set Column Width
         col_index = index.column()

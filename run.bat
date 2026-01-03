@@ -1,13 +1,15 @@
 @echo off
-set VENV_PATH=d:\Py_2025\12-2025\GML_free\FILE_ORGANIZER\.env
+REM Get the directory where this batch file is located
+set "SCRIPT_DIR=%~dp0"
+set "VENV_PATH=%SCRIPT_DIR%.venv"
 
 if not exist "%VENV_PATH%\Scripts\activate.bat" (
     echo Virtual environment not found. Creating...
     python -m venv "%VENV_PATH%"
     call "%VENV_PATH%\Scripts\activate.bat"
-    pip install -r requirements.txt
+    pip install -r "%SCRIPT_DIR%requirements.txt"
 ) else (
     call "%VENV_PATH%\Scripts\activate.bat"
 )
 
-python src/main.py %*
+python "%SCRIPT_DIR%src\main.py" %*

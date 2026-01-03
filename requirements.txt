@@ -1,2 +1,6 @@
 pandas
 PyQt6
+pymupdf
+watchdog
+pytest
+pytest-qt

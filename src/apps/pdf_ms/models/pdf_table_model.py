@@ -1,4 +1,5 @@
 from PyQt6.QtCore import QAbstractTableModel, Qt, pyqtSignal
+import pandas as pd
 
 class PDFTableModel(QAbstractTableModel):
     """
@@ -9,7 +10,7 @@ class PDFTableModel(QAbstractTableModel):
     def __init__(self, data=None):
         super().__init__()
         self._data = data
-        self._headers = ["Filename", "Type", "Tags", "Category", "Path", "Actions"] # Added Type column
+        self._headers = ["Filename", "Type", "Tags", "Category", "Bookmarks", "Path", "Actions"]
 
     def set_data(self, df):
         self.beginResetModel()
@@ -31,7 +32,7 @@ class PDFTableModel(QAbstractTableModel):
             col = index.column()
             
             # Map column index to DataFrame column
-            # Headers: ["Filename", "Type", "Tags", "Category", "Path", "Actions"]
+            # Headers: ["Filename", "Type", "Tags", "Category", "Bookmarks", "Path", "Actions"]
             
             if col == 0:
                 if 'filename_no_ext' in self._data.columns:
@@ -47,11 +48,32 @@ class PDFTableModel(QAbstractTableModel):
             elif col == 3:
                 return str(self._data.iloc[row]['category'])
             elif col == 4:
+                # Bookmarks Status
+                if 'has_toc' in self._data.columns:
+                    val = self._data.iloc[row]['has_toc']
+                    has_toc = True if (val and val is not pd.NA) else False
+                    return "✓ Yes" if has_toc else "✗ No"
+                return "?"
+            elif col == 5:
                 if 'relative_path' in self._data.columns:
                     return str(self._data.iloc[row]['relative_path'])
                 return str(self._data.iloc[row]['original_path'])
-            elif col == 5:
-                return "Action" # Placeholder text, will be painted by delegate
+            elif col == 6:
+                # Delegate handles painting, but we can return text for accessibility if needed
+                return "" 
+        
+        elif role == Qt.ItemDataRole.UserRole:
+            # Return enriched data for delegates
+            row = index.row()
+            has_toc = False
+            if 'has_toc' in self._data.columns:
+                val = self._data.iloc[row]['has_toc']
+                has_toc = True if (val and val is not pd.NA) else False
+                
+            return {
+                'has_toc': has_toc,
+                'path': str(self._data.iloc[row]['original_path'])
+            }
         
         return None
 

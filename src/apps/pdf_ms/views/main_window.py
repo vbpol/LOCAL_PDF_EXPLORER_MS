@@ -41,6 +41,7 @@ class MainWindow(QMainWindow):
 
         # Settings Action
         self.act_settings = QAction("Settings", self)
+        self.act_settings.setToolTip("Configure application settings")
         self.toolbar.addAction(self.act_settings)
 
         # History Combo Box
@@ -60,6 +61,7 @@ class MainWindow(QMainWindow):
         
         self.search_input = QLineEdit()
         self.search_input.setPlaceholderText("Search filenames, tags, notes...")
+        self.search_input.setToolTip("Filter files by name, tags, or notes")
         self.search_input.setFixedWidth(200)
         self.toolbar.addWidget(self.search_input)
 

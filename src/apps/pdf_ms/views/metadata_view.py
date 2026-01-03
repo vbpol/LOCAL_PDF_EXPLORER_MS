@@ -27,16 +27,19 @@ class MetadataView(QWidget):
         # Tags
         layout.addWidget(QLabel("Tags (comma separated):"))
         self.txt_tags = QLineEdit()
+        self.txt_tags.setToolTip("Enter tags separated by commas")
         layout.addWidget(self.txt_tags)
 
         # Notes
         layout.addWidget(QLabel("Notes:"))
         self.txt_notes = QTextEdit()
+        self.txt_notes.setToolTip("Enter general notes for this file")
         layout.addWidget(self.txt_notes)
 
         # Buttons
         btn_layout = QHBoxLayout()
         self.btn_save = QPushButton("Save Metadata")
+        self.btn_save.setToolTip("Save tags and notes to database")
         self.btn_save.clicked.connect(self.on_save)
         btn_layout.addWidget(self.btn_save)
         

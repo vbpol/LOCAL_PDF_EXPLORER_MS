@@ -3,9 +3,9 @@
 ## 1. Phase Completion Workflow
 When a development phase (e.g., Phase 1 MVP Polish) is completed:
 
-1.  **Validate Core**: Run the corresponding phase script (e.g., `scripts/run_phase1.bat`) to ensure CoreApp stability in headless mode.
-2.  **Validate UI (Automated)**: Run `pytest tests/test_ui_smoke.py` to ensure the application initializes without crashing.
-3.  **Validate UI (Manual)**: Run `run.bat` to verify the window opens and renders correctly.
+1.  **Validate Core**: Run the corresponding phase script (`scripts/run_phase1.bat` or `scripts/run_phase2.bat`).
+2.  **Validate UI (Automated)**: Run `pytest tests/test_ui_smoke.py` (Phase 1) or `pytest tests/test_phase2_ui.py` (Phase 2).
+3.  **Validate UI (Manual)**: Run `run.bat`.
 4.  **Bump Version**:
     *   Open `src/__init__.py`.
     *   Increment `__version__` (Semantic Versioning: Major.Minor.Patch).

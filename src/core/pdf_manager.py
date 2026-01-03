@@ -14,4 +14,21 @@ class PDFManager:
 
     def update_metadata(self, file_path: str, tags: str, notes: str, bookmarks: str = ""):
         """Update metadata in storage."""
+        # Check if bookmarks is empty, maybe we should preserve existing?
+        # Current usage suggests this method is for overwriting provided fields.
+        # But if we want partial updates, we should use update_custom.
+        self.storage.update_pdf_metadata(file_path, tags, notes, bookmarks)
+
+    def update_custom(self, file_path: str, **kwargs):
+        """
+        Perform a partial update.
+        Reads existing metadata, updates only provided keys, and saves back.
+        Supported keys: 'tags', 'notes', 'bookmarks'.
+        """
+        current = self.get_metadata(file_path)
+        
+        tags = kwargs.get('tags', current['tags'])
+        notes = kwargs.get('notes', current['notes'])
+        bookmarks = kwargs.get('bookmarks', current['bookmarks'])
+        
         self.storage.update_pdf_metadata(file_path, tags, notes, bookmarks)
