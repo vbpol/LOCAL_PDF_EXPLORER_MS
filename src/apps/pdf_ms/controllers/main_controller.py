@@ -12,7 +12,7 @@ from src.apps.pdf_ms.models.pdf_proxy_model import PDFSortFilterProxyModel
 from src.apps.pdf_ms.views.main_window import MainWindow
 from src.apps.pdf_ms.views.metadata_view import MetadataView
 from src.apps.pdf_ms.views.settings_dialog import SettingsDialog
-from src.apps.pdf_ms.views.reader_window import ReaderWindow
+from src.apps.pdf_ms.views.reader import ReaderWindow
 
 class MainController:
     """

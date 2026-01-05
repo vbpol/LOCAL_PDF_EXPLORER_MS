@@ -69,6 +69,28 @@
     - Create unit tests for `PDFEngine` (`tests/test_app_scan_toc.py`).
     - Verified on real files in `E:\AVEVA-TM docs\1D ENGINEERING`.
 
+## Phase 7: Modular Reader Refactor (Reader V2)
+- [x] **Architecture Refactor**:
+    - Split `ReaderWindow` into self-contained components:
+        - `src/apps/pdf_ms/views/reader/reader_window.py` (Main Container)
+        - `src/apps/pdf_ms/views/reader/components/pdf_viewer_view.py` (Middle Panel)
+        - `src/apps/pdf_ms/views/reader/components/pdf_toolbar.py` (Toolbar)
+        - `src/apps/pdf_ms/views/reader/components/toc_panel.py` (Left Panel)
+        - `src/apps/pdf_ms/views/reader/components/metadata_panel.py` (Right Panel Wrapper)
+- [x] **PDF Viewer Enhancements**:
+    - **Zoom/Scroll**: Implement Ctrl+Scroll for Zoom.
+    - **View Modes**:
+        - Fit to Page (Aspect Ratio preserved, fully visible).
+        - Fit Width (Scroll vertically).
+        - Fit Height.
+        - Full Mode (Fullscreen).
+- [x] **Toolbar Extension**:
+    - Add buttons for new view modes.
+    - Zoom In/Out controls.
+- [ ] **Validation**:
+    - Verify all panels work independently and communicate correctly.
+    - Verify Zoom/Fit logic.
+
 ## Validation Checklist
 - [x] App launches without errors.
 - [x] Scans directory and lists PDF files.
@@ -78,3 +100,10 @@
 - [x] Double click opens the PDF.
 - [x] ToC extraction works and persists.
 - [x] User Favorites (Star) persist across sessions.
+- [ ] Reader opens with new modular layout.
+- [ ] ToC navigation works.
+- [ ] Zoom In/Out works (Mouse Wheel & Buttons).
+- [ ] Fit Width/Page works.
+- [ ] Full Screen mode works.
+- [ ] Chapter Notes saving works.
+- [ ] Metadata saving from Reader works.
