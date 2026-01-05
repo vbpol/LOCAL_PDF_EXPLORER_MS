@@ -24,7 +24,10 @@
 ### 4.2 Metadata Management
 - **Tags**: Add, remove, and manage custom tags (e.g., "Invoice", "Urgent", "Personal").
 - **Notes**: Rich text or plain text notes associated with a specific file.
-- **Table of Contents (Structure)**: View and navigate PDF internal structure (ToC). Store extraction status.
+- **Table of Contents (Structure)**: 
+    - **Detection**: Automatically verify if a PDF has an embedded Outline/ToC.
+    - **Extraction**: Extract and display existing ToC.
+    - **Storage**: Store extraction status and data.
 - **User Bookmarks (Favorites)**: "Star" or favorite files for quick access/visibility in the grid. Support for single click toggle and batch selection toggle.
 
 ### 4.3 Persistence

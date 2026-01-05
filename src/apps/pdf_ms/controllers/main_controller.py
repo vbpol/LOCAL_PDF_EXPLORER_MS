@@ -138,10 +138,10 @@ class MainController:
                 # Show loading cursor
                 QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
                 
-                from src.core.services.pdf_renderer import PDFRenderer
+                from src.core.services.pdf_engine import PDFEngine
                 import json
                 
-                toc = PDFRenderer.get_toc(file_path)
+                toc = PDFEngine.extract_toc(file_path)
                 toc_json = json.dumps(toc)
                 self.app_core.update_file_custom(file_path, bookmarks=toc_json)
                 
@@ -275,7 +275,7 @@ class MainController:
         QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
         
         try:
-            from src.core.services.pdf_renderer import PDFRenderer
+            from src.core.services.pdf_engine import PDFEngine
             import json
             
             success_count = 0
@@ -292,7 +292,7 @@ class MainController:
                         continue
                     
                     # Extract ToC
-                    toc = PDFRenderer.get_toc(file_path)
+                    toc = PDFEngine.extract_toc(file_path)
                     toc_json = json.dumps(toc)
                     
                     # Save to DB

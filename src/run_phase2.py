@@ -6,6 +6,7 @@ import fitz # pymupdf
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.core.services.pdf_renderer import PDFRenderer
+from src.core.services.pdf_engine import PDFEngine
 
 def create_dummy_pdf(path):
     """Creates a simple 1-page PDF for testing WITH a ToC."""
@@ -44,8 +45,8 @@ def main():
         img_data = PDFRenderer.render_page(test_pdf, 1)
         assert len(img_data) > 0, "Render produced empty bytes"
         print(f"[OK] Page Rendering Verified ({len(img_data)} bytes)")
-
-        toc = PDFRenderer.get_toc(test_pdf)
+        
+        toc = PDFEngine.extract_toc(test_pdf)
         print(f"Extracted ToC: {toc}")
         assert isinstance(toc, list), "ToC should be a list"
         

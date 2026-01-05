@@ -24,7 +24,7 @@ class ActionDelegate(QStyledItemDelegate):
         self.icon_toc = QApplication.style().standardIcon(QStyle.StandardPixmap.SP_FileDialogInfoView) 
 
     def paint(self, painter, option, index):
-        if index.column() == 6: # Action Column (now column 6 after Bookmarks added)
+        if index.column() == 7: # Action Column
             rect = option.rect
             width = rect.width()
             height = rect.height()
@@ -94,7 +94,7 @@ class ActionDelegate(QStyledItemDelegate):
         QApplication.style().drawControl(QStyle.ControlElement.CE_PushButton, opt, painter)
 
     def editorEvent(self, event, model, option, index):
-        if index.column() == 6:
+        if index.column() == 7:
             rect = option.rect
             width = rect.width()
             btn_width = width // 3
@@ -143,7 +143,7 @@ class ActionDelegate(QStyledItemDelegate):
         """
         Handle tooltips for the action buttons.
         """
-        if index.column() == 6:
+        if index.column() == 7:
             if event.type() == QEvent.Type.ToolTip:
                 rect = option.rect
                 width = rect.width()

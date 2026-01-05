@@ -6,9 +6,10 @@ import fitz
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.core.services.pdf_renderer import PDFRenderer
+from src.core.services.pdf_engine import PDFEngine
 
 def main():
-    print("Testing PDFRenderer...")
+    print("Testing PDFRenderer & PDFEngine...")
     # Find a PDF to test
     root = os.path.dirname(os.path.abspath(__file__))
     # Walk to find a pdf
@@ -28,7 +29,7 @@ def main():
     
     # Test ToC
     print("Extracting ToC...")
-    toc = PDFRenderer.get_toc(target_pdf)
+    toc = PDFEngine.extract_toc(target_pdf)
     print(f"ToC Items: {len(toc)}")
     if toc:
         print(f"Sample: {toc[0]}")

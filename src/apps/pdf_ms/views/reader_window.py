@@ -8,6 +8,7 @@ from PyQt6.QtGui import QPixmap, QImage
 import json
 
 from src.core.services.pdf_renderer import PDFRenderer
+from src.core.services.pdf_engine import PDFEngine
 from src.apps.pdf_ms.views.metadata_view import MetadataView
 
 class ReaderWindow(QMainWindow):
@@ -130,7 +131,7 @@ class ReaderWindow(QMainWindow):
         
         # 2. If DB empty, Extract from PDF
         if not self.toc_data:
-            self.toc_data = PDFRenderer.get_toc(self.file_path)
+            self.toc_data = PDFEngine.extract_toc(self.file_path)
             # Auto-save initial extraction to DB? No, wait for user to save notes or explicit action.
             # But spec said "Check DB... If empty extract".
             # For now, we just use extracted.

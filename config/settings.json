@@ -98,11 +98,11 @@
     "backup_enabled": true,
     "db_path": "data/history.db",
     "log_format": "json",
-    "last_version_github": "v1.0.3",
+    "last_version_github": "v1.0.4",
     "date_of_publication": "2026-01-03",
     "github_repository_url": "https://github.com/vbpol/LOCAL_PDF_EXPLORER_MS.git",
-    "local_dev_version": "1.0.3",
-    "local_dev_date": "2026-01-03",
+    "local_dev_version": "1.0.4",
+    "local_dev_date": "2026-01-05",
     "local_dev_scope": "PDF MS_tags, notes, bookmarks, TOC \u00e0\u00a0 completer...",
     "dev_ai_ide": "TRAE"
 }

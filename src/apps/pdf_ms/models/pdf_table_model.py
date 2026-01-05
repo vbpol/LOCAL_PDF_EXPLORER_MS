@@ -10,7 +10,7 @@ class PDFTableModel(QAbstractTableModel):
     def __init__(self, data=None):
         super().__init__()
         self._data = data
-        self._headers = ["Filename", "Type", "Tags", "Category", "Fav", "Bookmarks", "Path", "Actions"]
+        self._headers = ["Filename", "Type", "Tags", "Category", "Fav", "ToC", "Path", "Actions"]
 
     def set_data(self, df):
         self.beginResetModel()

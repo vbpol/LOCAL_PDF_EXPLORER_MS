@@ -4,6 +4,7 @@ from .organizer import FileOrganizer
 from .storage import Storage
 from .pdf_manager import PDFManager
 from .services.bookmark_service import BookmarkService
+from .services.pdf_engine import PDFEngine
 from pathlib import Path
 
 class CoreApp:
@@ -39,7 +40,14 @@ class CoreApp:
                 # However, organizer returns 'original_path' column.
                 fpath = str(row['original_path'])
                 meta = self.pdf_manager.get_metadata(fpath)
+                
+                # Check DB for extracted ToC
                 has_toc = bool(meta.get('bookmarks'))
+                
+                # If not in DB, check file physically (Real-time verification)
+                if not has_toc:
+                     has_toc = PDFEngine.has_toc(fpath)
+
                 is_bookmarked = meta.get('is_bookmarked', False)
                 return pd.Series([meta['tags'], meta['notes'], has_toc, is_bookmarked])
 

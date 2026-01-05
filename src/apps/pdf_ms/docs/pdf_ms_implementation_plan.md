@@ -55,6 +55,20 @@
     - Dynamic App Title with Version/Date/AI-IDE info.
     - `Version_History.md` tracking.
 
+## Phase 6: ToC Engine & Optimization
+- [x] **PDF Engine Service**:
+    - Create `src/core/services/pdf_engine.py`.
+    - Implement `has_toc(file_path) -> bool` using `pymupdf`.
+    - Implement `extract_toc(file_path) -> list` (refactored from `PDFRenderer`).
+    - Ensure scalability for large file lists.
+- [x] **Integration**:
+    - Update `CoreApp.scan()` to verify ToC status using `PDFEngine`.
+    - Update `PDFTableModel` "ToC" column to reflect actual status (✓/✗).
+    - Update `MainController` to use `PDFEngine.extract_toc` for extraction.
+- [x] **Testing**:
+    - Create unit tests for `PDFEngine` (`tests/test_app_scan_toc.py`).
+    - Verified on real files in `E:\AVEVA-TM docs\1D ENGINEERING`.
+
 ## Validation Checklist
 - [x] App launches without errors.
 - [x] Scans directory and lists PDF files.

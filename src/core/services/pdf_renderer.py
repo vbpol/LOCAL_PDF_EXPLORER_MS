@@ -9,53 +9,6 @@ class PDFRenderer:
     """
     
     @staticmethod
-    def get_toc(file_path: str) -> List[Dict]:
-        """
-        Extracts the Table of Contents (Bookmarks) from a PDF.
-        Returns a list of dictionaries with 'title', 'page', and 'children' (if flattened) or nested structure.
-        PyMuPDF returns: [lvl, title, page, dest]
-        We convert this to a nested JSON-friendly format.
-        """
-        doc = fitz.open(file_path)
-        toc_raw = doc.get_toc()
-        doc.close()
-        
-        # Convert flat list to nested tree
-        # PyMuPDF toc: [[lvl, title, page, ...], ...]
-        # lvl is 1-based hierarchy level.
-        
-        toc_tree = []
-        stack = [] # [(level, node_dict)]
-
-        for item in toc_raw:
-            lvl, title, page = item[0], item[1], item[2]
-            node = {
-                "title": title,
-                "page": page,
-                "children": [],
-                "user_note": "" # Placeholder for user data
-            }
-            
-            if lvl == 1:
-                toc_tree.append(node)
-                stack = [(1, node)]
-            else:
-                # Find parent
-                while stack and stack[-1][0] >= lvl:
-                    stack.pop()
-                
-                if stack:
-                    parent_node = stack[-1][1]
-                    parent_node["children"].append(node)
-                    stack.append((lvl, node))
-                else:
-                    # Fallback if hierarchy is broken, treat as root
-                    toc_tree.append(node)
-                    stack = [(lvl, node)]
-                    
-        return toc_tree
-
-    @staticmethod
     def render_page(file_path: str, page_num: int, zoom: float = 1.0) -> bytes:
         """
         Renders a specific page to PNG bytes.
