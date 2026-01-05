@@ -19,6 +19,9 @@ class PDFEngine:
         """
         if not os.path.exists(file_path):
             return False
+        
+        if not file_path.lower().endswith('.pdf'):
+            return False
             
         try:
             doc = fitz.open(file_path)
@@ -37,6 +40,9 @@ class PDFEngine:
         Extract the Table of Contents from the PDF and return a nested dictionary structure.
         """
         if not os.path.exists(file_path):
+            return []
+            
+        if not file_path.lower().endswith('.pdf'):
             return []
             
         try:

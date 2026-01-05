@@ -20,8 +20,8 @@ class PDFToolbar(QToolBar):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setMovable(False)
-        self.setFloatable(False)
+        # self.setMovable(False) # Allow moving by default for dockable experience
+        # self.setFloatable(False) 
         self._init_actions()
 
     def _init_actions(self):

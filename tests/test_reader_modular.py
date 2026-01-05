@@ -48,11 +48,19 @@ def test_reader_window_initialization(qapp):
     assert isinstance(window.toc_panel, ToCPanel)
     assert isinstance(window.metadata_panel, MetadataPanel)
     
-    # Check Splitter
-    assert window.splitter.count() == 3 # Left, Center, Right
+    # Check Dock Widgets
+    assert window.dock_toc is not None
+    assert window.dock_meta is not None
+    assert window.centralWidget() == window.viewer
     
     # Check Toolbar Actions
-    assert len(window.toolbar.actions()) > 5 # Should have nav, zoom, fit modes
+    actions = window.toolbar.actions()
+    assert len(actions) > 7 # Nav(3) + Zoom(2) + Fit(3) + Full(1) + Toggle(2) + Separators
+    
+    # Verify Toggle Actions exist
+    action_texts = [a.text() for a in actions]
+    assert "ToC" in action_texts
+    assert "Info" in action_texts
     
     # Clean up
     window.close()

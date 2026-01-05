@@ -1,7 +1,9 @@
 from PyQt6.QtWidgets import (
-    QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QSplitter, QMessageBox
+    QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QSplitter, QMessageBox,
+    QDockWidget
 )
 from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QKeyEvent
 import json
 
 from src.core.services.pdf_engine import PDFEngine
@@ -12,7 +14,7 @@ from src.apps.pdf_ms.views.reader.components import (
 class ReaderWindow(QMainWindow):
     """
     Modular Reader Window (Reader V2).
-    Orchestrates ToC, Viewer, and Metadata panels.
+    Orchestrates ToC, Viewer, and Metadata panels using Dock Widgets.
     """
     
     def __init__(self, file_path, core_app, parent=None):
@@ -28,40 +30,45 @@ class ReaderWindow(QMainWindow):
         self._load_data()
         
     def _init_ui(self):
-        central_widget = QWidget()
-        self.setCentralWidget(central_widget)
-        main_layout = QHBoxLayout(central_widget)
-        main_layout.setContentsMargins(0, 0, 0, 0)
-        main_layout.setSpacing(0)
-        
-        # Splitter
-        self.splitter = QSplitter(Qt.Orientation.Horizontal)
-        main_layout.addWidget(self.splitter)
-        
-        # 1. Left Panel (ToC)
-        self.toc_panel = ToCPanel()
-        self.splitter.addWidget(self.toc_panel)
-        
-        # 2. Center Panel (Toolbar + Viewer)
-        center_widget = QWidget()
-        center_layout = QVBoxLayout(center_widget)
-        center_layout.setContentsMargins(0, 0, 0, 0)
-        center_layout.setSpacing(0)
-        
-        self.toolbar = PDFToolbar()
-        center_layout.addWidget(self.toolbar)
-        
+        # 1. Center Panel (Viewer)
         self.viewer = PDFViewerPanel()
-        center_layout.addWidget(self.viewer)
+        self.setCentralWidget(self.viewer)
         
-        self.splitter.addWidget(center_widget)
+        # 2. Toolbar (Native QMainWindow Toolbar)
+        self.toolbar = PDFToolbar()
+        # Enable dockable/floatable features
+        self.toolbar.setMovable(True)
+        self.toolbar.setFloatable(True)
+        self.addToolBar(Qt.ToolBarArea.TopToolBarArea, self.toolbar)
         
-        # 3. Right Panel (Metadata)
+        # 3. Left Panel (ToC)
+        self.dock_toc = QDockWidget("Table of Contents", self)
+        self.toc_panel = ToCPanel()
+        self.dock_toc.setWidget(self.toc_panel)
+        self.dock_toc.setAllowedAreas(Qt.DockWidgetArea.LeftDockWidgetArea | Qt.DockWidgetArea.RightDockWidgetArea)
+        self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.dock_toc)
+        
+        # 4. Right Panel (Metadata)
+        self.dock_meta = QDockWidget("Metadata", self)
         self.metadata_panel = MetadataPanel()
-        self.splitter.addWidget(self.metadata_panel)
+        self.dock_meta.setWidget(self.metadata_panel)
+        self.dock_meta.setAllowedAreas(Qt.DockWidgetArea.LeftDockWidgetArea | Qt.DockWidgetArea.RightDockWidgetArea)
+        self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.dock_meta)
         
-        # Set initial sizes [250, 600, 250]
-        self.splitter.setSizes([250, 600, 250])
+        # 5. Add Toggle Actions to Toolbar
+        self.toolbar.addSeparator()
+        
+        # ToC Toggle
+        act_toc = self.dock_toc.toggleViewAction()
+        act_toc.setText("ToC")
+        act_toc.setToolTip("Show/Hide Table of Contents Panel")
+        self.toolbar.addAction(act_toc)
+        
+        # Metadata Toggle
+        act_meta = self.dock_meta.toggleViewAction()
+        act_meta.setText("Info")
+        act_meta.setToolTip("Show/Hide Metadata Panel")
+        self.toolbar.addAction(act_meta)
 
     def _connect_signals(self):
         # Toolbar -> Viewer
@@ -147,3 +154,10 @@ class ReaderWindow(QMainWindow):
         else:
             self.showFullScreen()
             self.toolbar.act_full_mode.setChecked(True)
+
+    def keyPressEvent(self, event: QKeyEvent):
+        """Handle ESC key to exit full screen."""
+        if event.key() == Qt.Key.Key_Escape and self.isFullScreen():
+            self._toggle_full_screen()
+        else:
+            super().keyPressEvent(event)

@@ -87,9 +87,11 @@
 - [x] **Toolbar Extension**:
     - Add buttons for new view modes.
     - Zoom In/Out controls.
-- [ ] **Validation**:
+- [x] **Validation**:
     - Verify all panels work independently and communicate correctly.
     - Verify Zoom/Fit logic.
+    - Verify Full Screen mode works (Toggle + ESC key).
+    - Verify Docking features (Movable panels).
 
 ## Validation Checklist
 - [x] App launches without errors.
@@ -100,10 +102,10 @@
 - [x] Double click opens the PDF.
 - [x] ToC extraction works and persists.
 - [x] User Favorites (Star) persist across sessions.
-- [ ] Reader opens with new modular layout.
-- [ ] ToC navigation works.
-- [ ] Zoom In/Out works (Mouse Wheel & Buttons).
-- [ ] Fit Width/Page works.
-- [ ] Full Screen mode works.
-- [ ] Chapter Notes saving works.
-- [ ] Metadata saving from Reader works.
+- [x] Reader opens with new modular layout (Dockable Panels).
+- [x] ToC navigation works.
+- [x] Zoom In/Out works (Mouse Wheel & Buttons).
+- [x] Fit Width/Page works.
+- [x] Full Screen mode works (including ESC to exit).
+- [x] Chapter Notes saving works.
+- [x] Metadata saving from Reader works.

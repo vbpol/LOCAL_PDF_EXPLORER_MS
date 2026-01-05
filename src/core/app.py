@@ -32,6 +32,13 @@ class CoreApp:
         path = Path(directory_path).resolve()
         self.current_plan = self.organizer.scan_directory(path, recursive=recursive)
         
+        # Filter for PDF files only
+        if self.current_plan is not None and not self.current_plan.empty:
+            # Ensure case-insensitive matching
+            self.current_plan = self.current_plan[
+                self.current_plan['extension'].str.lower() == '.pdf'
+            ].copy()
+
         # Enrich with PDF metadata if available
         if self.current_plan is not None and not self.current_plan.empty:
             def get_meta(row):
@@ -39,6 +46,11 @@ class CoreApp:
                 # If we are just scanning, it's 'original_path'.
                 # However, organizer returns 'original_path' column.
                 fpath = str(row['original_path'])
+                
+                # Double-check if it's a PDF (ignore .url, .exe, etc. if they slipped through)
+                if not fpath.lower().endswith('.pdf'):
+                    return pd.Series(['', '', False, False])
+
                 meta = self.pdf_manager.get_metadata(fpath)
                 
                 # Check DB for extracted ToC
