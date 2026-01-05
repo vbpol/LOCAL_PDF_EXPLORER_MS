@@ -93,6 +93,18 @@
     - Verify Full Screen mode works (Toggle + ESC key).
     - Verify Docking features (Movable panels).
 
+## Phase 7.1: Reader Enhancements (UX Polish)
+- [x] **Panel Toggles**:
+    - Add "ToC" and "Info" toggle buttons to Toolbar.
+    - Ensure correct state sync with DockWidgets.
+- [x] **Fit Current View (Fit Content)**:
+    - Add "Fit Content" mode to Viewer (Zooms to visible content width).
+    - Update `PDFEngine` to extract exact Y-coordinates from ToC.
+    - Update `ToCPanel` & `ReaderWindow` to support precise navigation.
+    - **Friendly Navigation**: Auto-switch to "Fit Content" mode when navigating via ToC for better readability.
+- [x] **Bug Fixes**:
+    - Fix Right Panel (Metadata) docking/resizing issues (Word wrap & min-width).
+
 ## Validation Checklist
 - [x] App launches without errors.
 - [x] Scans directory and lists PDF files.

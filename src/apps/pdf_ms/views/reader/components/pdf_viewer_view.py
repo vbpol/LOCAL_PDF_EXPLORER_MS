@@ -18,7 +18,7 @@ class PDFViewerPanel(QWidget):
         self.current_page = 1
         self.total_pages = 0
         self.zoom_level = 1.0
-        self.view_mode = "custom" # "custom", "width", "height", "page"
+        self.view_mode = "custom" # "custom", "width", "height", "page", "content"
         
         self._init_ui()
         
@@ -47,7 +47,7 @@ class PDFViewerPanel(QWidget):
         self.current_page = 1
         self.render_page()
 
-    def render_page(self):
+    def render_page(self, y_target=None):
         if not self.file_path:
             return
 
@@ -62,6 +62,12 @@ class PDFViewerPanel(QWidget):
             pixmap = QPixmap.fromImage(image)
             self.image_label.setPixmap(pixmap)
             # Ensure label size matches pixmap if not resizable, but ScrollArea handles it
+            
+            if y_target is not None:
+                # Scroll to Y
+                # y_target is in PDF points. Convert to pixels.
+                scroll_y = int(y_target * self.zoom_level)
+                self.scroll_area.verticalScrollBar().setValue(scroll_y)
         
         self.page_changed.emit(self.current_page)
 
@@ -76,7 +82,6 @@ class PDFViewerPanel(QWidget):
             doc = fitz.open(self.file_path)
             page = doc.load_page(self.current_page - 1)
             rect = page.rect
-            doc.close()
             
             page_w, page_h = rect.width, rect.height
             view_w = self.scroll_area.viewport().width() - 20 # Scrollbar buffer
@@ -91,14 +96,33 @@ class PDFViewerPanel(QWidget):
                 ratio_w = view_w / page_w
                 ratio_h = view_h / page_h
                 self.zoom_level = min(ratio_w, ratio_h)
+            elif self.view_mode == "content":
+                # Fit Content - Fit visible content width
+                try:
+                    blocks = page.get_text("blocks")
+                    if blocks:
+                        min_x = min(b[0] for b in blocks)
+                        max_x = max(b[2] for b in blocks)
+                        content_width = max_x - min_x
+                        content_width *= 1.05 # Add 5% padding
+                        if content_width > 0:
+                            self.zoom_level = view_w / content_width
+                        else:
+                            self.zoom_level = view_w / page_w
+                    else:
+                        self.zoom_level = view_w / page_w
+                except:
+                    self.zoom_level = view_w / page_w
+
+            doc.close()
                 
         except Exception as e:
             print(f"Error calculating zoom: {e}")
 
-    def go_to_page(self, page):
+    def go_to_page(self, page, y_offset=0.0):
         if 1 <= page <= self.total_pages:
             self.current_page = page
-            self.render_page()
+            self.render_page(y_target=y_offset)
 
     def next_page(self):
         self.go_to_page(self.current_page + 1)

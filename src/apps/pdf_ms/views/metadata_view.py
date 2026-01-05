@@ -14,6 +14,7 @@ class MetadataView(QWidget):
     def __init__(self):
         super().__init__()
         self.current_file_path = None
+        self.setMinimumWidth(200) # Ensure it doesn't get crushed too small
         self.init_ui()
 
     def init_ui(self):
@@ -22,6 +23,7 @@ class MetadataView(QWidget):
         # Header
         self.lbl_file = QLabel("No file selected")
         self.lbl_file.setStyleSheet("font-weight: bold;")
+        self.lbl_file.setWordWrap(True)  # Allow wrapping for long paths
         layout.addWidget(self.lbl_file)
 
         # Tags

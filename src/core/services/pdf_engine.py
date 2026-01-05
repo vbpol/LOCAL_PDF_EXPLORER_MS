@@ -59,9 +59,21 @@ class PDFEngine:
 
             for item in toc_raw:
                 lvl, title, page = item[0], item[1], item[2]
+                dest = item[3] if len(item) > 3 else None
+                
+                # Extract Y coordinate if available in dest
+                dest_y = 0
+                if dest and isinstance(dest, dict) and 'to' in dest:
+                    try:
+                        # 'to' is usually a fitz.Point(x, y)
+                        dest_y = dest['to'].y
+                    except:
+                        pass
+                
                 node = {
                     "title": title,
                     "page": page,
+                    "dest_y": dest_y,
                     "children": [],
                     "user_note": "" # Placeholder for user data
                 }

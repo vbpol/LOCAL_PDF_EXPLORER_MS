@@ -12,6 +12,7 @@ class ToCPanel(QWidget):
     
     # Signals
     page_navigation_requested = pyqtSignal(int)
+    toc_navigation_requested = pyqtSignal(int, float) # page, y_offset
     save_toc_requested = pyqtSignal(list) # Emits the full ToC data structure with notes
     
     def __init__(self, parent=None):
@@ -75,7 +76,9 @@ class ToCPanel(QWidget):
         if data:
             # 1. Navigate
             page = data.get('page', 1)
-            self.page_navigation_requested.emit(page)
+            y_offset = data.get('dest_y', 0.0)
+            self.page_navigation_requested.emit(page) # Keep for backward compatibility if needed
+            self.toc_navigation_requested.emit(page, y_offset)
             
             # 2. Load Note
             self.note_editor.blockSignals(True)

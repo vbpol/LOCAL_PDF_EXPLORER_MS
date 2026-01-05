@@ -14,6 +14,7 @@ class PDFToolbar(QToolBar):
     fit_page_requested = pyqtSignal()
     fit_width_requested = pyqtSignal()
     fit_height_requested = pyqtSignal()
+    fit_content_requested = pyqtSignal()
     full_mode_requested = pyqtSignal()
     prev_page_requested = pyqtSignal()
     next_page_requested = pyqtSignal()
@@ -59,6 +60,12 @@ class PDFToolbar(QToolBar):
         self.act_fit_width.setCheckable(True)
         self.act_fit_width.triggered.connect(lambda: self._handle_mode_change(self.act_fit_width, self.fit_width_requested))
         self.addAction(self.act_fit_width)
+
+        self.act_fit_content = QAction("Fit Content", self)
+        self.act_fit_content.setCheckable(True)
+        self.act_fit_content.setToolTip("Fit to visible content (ignore margins)")
+        self.act_fit_content.triggered.connect(lambda: self._handle_mode_change(self.act_fit_content, self.fit_content_requested))
+        self.addAction(self.act_fit_content)
         
         self.act_fit_height = QAction("Fit Height", self)
         self.act_fit_height.setCheckable(True)
@@ -84,7 +91,7 @@ class PDFToolbar(QToolBar):
 
     def _handle_mode_change(self, action, signal):
         # Uncheck others
-        for act in [self.act_fit_width, self.act_fit_height, self.act_fit_page]:
+        for act in [self.act_fit_width, self.act_fit_height, self.act_fit_page, self.act_fit_content]:
             if act != action:
                 act.setChecked(False)
         signal.emit()
@@ -97,3 +104,4 @@ class PDFToolbar(QToolBar):
         self.act_fit_width.setChecked(mode == "width")
         self.act_fit_height.setChecked(mode == "height")
         self.act_fit_page.setChecked(mode == "page")
+        self.act_fit_content.setChecked(mode == "content")

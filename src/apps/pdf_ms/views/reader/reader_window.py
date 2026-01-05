@@ -80,13 +80,14 @@ class ReaderWindow(QMainWindow):
         self.toolbar.fit_width_requested.connect(lambda: self.viewer.set_view_mode("width"))
         self.toolbar.fit_height_requested.connect(lambda: self.viewer.set_view_mode("height"))
         self.toolbar.fit_page_requested.connect(lambda: self.viewer.set_view_mode("page"))
+        self.toolbar.fit_content_requested.connect(lambda: self.viewer.set_view_mode("content"))
         self.toolbar.full_mode_requested.connect(self._toggle_full_screen)
         
         # Viewer -> Toolbar
         self.viewer.page_changed.connect(self._on_page_changed)
         
         # ToC -> Viewer
-        self.toc_panel.page_navigation_requested.connect(self.viewer.go_to_page)
+        self.toc_panel.toc_navigation_requested.connect(self._on_toc_navigation)
         
         # ToC -> App (Save)
         self.toc_panel.save_toc_requested.connect(self._save_toc_to_db)
@@ -131,6 +132,15 @@ class ReaderWindow(QMainWindow):
     def _on_page_changed(self, page):
         self.toolbar.update_page_info(page, self.viewer.total_pages)
         # Optional: Sync ToC selection if possible? (Complex, skip for now)
+
+    def _on_toc_navigation(self, page, y_offset):
+        # "activate it when users navigate by TOC item"
+        # Switch to Fit Content mode if not in a width-based mode for better readability
+        if self.viewer.view_mode not in ["width", "content"]:
+            self.viewer.set_view_mode("content")
+            self.toolbar.set_mode_checked("content")
+            
+        self.viewer.go_to_page(page, y_offset)
 
     def _save_toc_to_db(self, toc_data):
         try:
